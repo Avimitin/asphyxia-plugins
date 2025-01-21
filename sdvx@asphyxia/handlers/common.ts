@@ -1,6 +1,6 @@
 import { EVENT6, COURSES6, EXTENDS6, VALGENE6 } from '../data/exg';
 import {getVersion, getRandomIntInclusive} from '../utils';
-import fs from 'fs';
+import * as fs from 'fs';
 
 export const informationString = 
 `[sz:120]      [olc:555555][ol:4][c:ff3333,3333ff,77ff77]Asphyxia

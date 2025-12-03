@@ -1,3 +1,5 @@
+/// <reference lib="es2020.bigint" />
+
 import { getEncoreStageData } from "../data/extrastage";
 import Logger from "../utils/logger";
 

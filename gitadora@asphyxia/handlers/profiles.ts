@@ -1,3 +1,5 @@
+/// <reference lib="es2020.bigint" />
+
 import { getDefaultPlayerInfo, PlayerInfo } from "../models/playerinfo";
 import { PlayerRanking } from "../models/playerranking";
 import { getDefaultProfile, Profile } from "../models/profile";

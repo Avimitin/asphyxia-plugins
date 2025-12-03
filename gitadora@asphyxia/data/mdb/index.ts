@@ -46,7 +46,15 @@ export async function readMDBFile(path: string, processHandler?: processRawDataH
     break;
     case '.b64':
       const buff = await IO.ReadFile(path, 'utf-8');
-      const json = Buffer.from(buff, 'base64').toString('utf-8')
+      const bufferCtor = (globalThis as {
+        Buffer?: {
+          from(input: string, encoding: string): { toString(encoding: string): string }
+        }
+      }).Buffer
+      if (!bufferCtor) {
+        throw new Error('Buffer is not available in the current environment.')
+      }
+      const json = bufferCtor.from(buff, 'base64').toString('utf-8')
       // Uncomment to save the decoded base64 file as JSON.
       // await IO.WriteFile(path.replace(".b64",".json"), json)
       result = JSON.parse(json)

@@ -101,9 +101,18 @@ export function findMDBFile(fileNameWithoutExtension: string, path: string = nul
   }
 
   for (const ext of allowedFormats) {
-    const filePath = path + fileNameWithoutExtension + ext
-    if (IO.Exists(filePath)) {
-      return filePath
+    const candidateFileNames = ext === ".xml"
+      ? [
+          `mdb_${fileNameWithoutExtension}${ext}`,
+          `${fileNameWithoutExtension}${ext}`,
+        ]
+      : [`${fileNameWithoutExtension}${ext}`]
+
+    for (const fileName of candidateFileNames) {
+      const filePath = path + fileName
+      if (IO.Exists(filePath)) {
+        return filePath
+      }
     }
   }
 
@@ -116,7 +125,7 @@ export async function loadSongsForGameVersion(gameVer: string, processHandler?: 
   let mdbFile = findMDBFile(ver, mdbFolder)
 
   if (mdbFile == null) {
-    throw `No valid MDB files were found in the data/mdb subfolder. Ensure that this folder contains at least one of the following: ${ver}.json, ${ver}.xml or ${ver}.b64`
+    throw `No valid MDB files were found in the data/mdb subfolder. Ensure that this folder contains at least one of the following: ${ver}.json, mdb_${ver}.xml (${ver}.xml as fallback) or ${ver}.b64`
   }
 
   const music = await readMDBFile(mdbFile, processHandler ?? defaultProcessRawXmlData)

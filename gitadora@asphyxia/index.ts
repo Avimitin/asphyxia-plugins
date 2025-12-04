@@ -56,11 +56,17 @@ export function register() {
 
   const MultiRoute = (method: string, handler: EPR | boolean) => {
     // Helper for register multiple versions.
+    R.Route(`${method}`, handler);
+    R.Route(`re_${method}`, handler);
+    R.Route(`matixx_${method}`, handler);
     R.Route(`exchain_${method}`, handler);
     R.Route(`matixx_${method}`, handler);
     R.Route(`nextage_${method}`, handler)
     R.Route(`highvoltage_${method}`, handler)
-    // TODO: TB, TBRE and more older version?
+    R.Route(`fuzzup_${method}`, handler)    
+    R.Route(`galaxywave_${method}`, handler)
+    R.Route(`galaxywave_delta_${method}`, handler)
+    // TODO: TB, and more older version?
   };
 
   // Info

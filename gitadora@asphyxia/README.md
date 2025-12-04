@@ -1,15 +1,18 @@
 GITADORA Plugin for Asphyxia-Core
 =================================
-![Version: v1.3.0](https://img.shields.io/badge/version-v1.3.0-blue)
+![Version: v1.4.0](https://img.shields.io/badge/version-v1.4.0-blue)
 
 This plugin is based on converted from public-exported Asphyxia's Routes.
 
 Supported Versions
 ==================
+ - Tri-Boost Re:EVOLVE
  - Matixx
- - Exchain
+ - EXCHAIN
  - NEX+AGE
-
+ - HIGH-VOLTAGE
+ - FUZZ-UP
+ - GALAXY WAVE
 
 When Plugin Doesn't work correctly / Startup Error on Plugin
 ------------------------------------------------------------
@@ -28,6 +31,11 @@ Known Issues
 
 Release Notes
 =============
+
+v1.4.0
+----------------
+ * Added support for Tri-Boost Re:EVOLVE, HIGH-VOLTAGE, FUZZ-UP, GALAXY WAVE
+ * Bugfix for launch core with "--dev/--console"
 
 v1.3.0
 ----------------

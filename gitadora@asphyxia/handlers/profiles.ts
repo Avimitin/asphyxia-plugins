@@ -215,7 +215,7 @@ export const getPlayer: EPR = async (info, data, send) => {
     recommend_musicid_list: K.ARRAY('s32', extra.recommend_musicid_list ?? Array(5).fill(-1)),
     record,
     groove: {
-      extra_gauge: K.ITEM('s32', profile.extra_gauge),
+      extra_gauge: K.ITEM('s32', (profile.extra_gauge+95)),
       encore_gauge: K.ITEM('s32', profile.encore_gauge),
       encore_cnt: K.ITEM('s32', profile.encore_cnt),
       encore_success: K.ITEM('s32', profile.encore_success),
@@ -234,10 +234,15 @@ export const getPlayer: EPR = async (info, data, send) => {
     const obj = { point: K.ITEM('s32', 0) };
     if (i == 1) {
       addition['long_otobear_fes_1'] = obj;
+      addition['long_otobear_fes_2'] = obj;
       addition['phrase_combo_challenge'] = obj;
+      addition['sdvx_stamprally'] = obj;
+      addition['sdvx_stamprally2'] = obj;
       addition['sdvx_stamprally3'] = obj;
       addition['chronicle_1'] = obj;
-    } else {
+      addition['gitadora_oracle_1'] = obj;
+      addition['gitadora_oracle_2'] = obj;
+      } else {
       addition[`phrase_combo_challenge_${i}`] = obj;
     }
 
@@ -256,6 +261,15 @@ export const getPlayer: EPR = async (info, data, send) => {
         point_3: K.ITEM('s32', 0),
       };
       addition[`kouyou_challenge_${i}`] = { point: K.ITEM('s32', 0) };
+      addition[`dokidoki_valentine2_${i}`] = { point: K.ITEM('s32', 0) };
+      addition[`ohanami_challenge_${i}`] = { point: K.ITEM('s32', 0) };
+      addition[`otobear_in_the_tsubo_${i}`] = { point: K.ITEM('s32', 0) };
+      addition[`summer_craft_${i}`] = { point: K.ITEM('s32', 0) };
+      addition[`wakuteka_whiteday2_${i}`] = {
+        point_1: K.ITEM('s32', 0),
+        point_2: K.ITEM('s32', 0),
+        point_3: K.ITEM('s32', 0),
+      };
     }
   }
 
@@ -309,6 +323,21 @@ export const getPlayer: EPR = async (info, data, send) => {
       },
       event_score: { eventlist: {} },
       rockwave: { score_list: {} },
+      livehouse: { 
+        score_list: { 
+          score: {
+            term: K.ITEM('u8', -1),  
+            reward_id: K.ITEM('s32', -1), 
+            unlock_point: K.ITEM('s32', -1), 
+            chara_id_guitar: K.ITEM('s32', -1), 
+            chara_id_bass: K.ITEM('s32', -1), 
+            chara_id_drum: K.ITEM('s32', -1), 
+            chara_id_other: K.ITEM('s32', -1), 
+            leader: K.ITEM('s32', -1), 
+          },
+          last_livehouse: K.ITEM('s32', -1), 
+        } 
+      },
       jubeat_omiyage_challenge: {},
       light_mode_reward_item: { itemid: K.ITEM('s32', -1), rarity: K.ITEM('s32', 0) },
       standard_mode_reward_item: { itemid: K.ITEM('s32', -1), rarity: K.ITEM('s32', 0) },
@@ -327,6 +356,20 @@ export const getPlayer: EPR = async (info, data, send) => {
       kac2017: {
         entry_status: K.ITEM('s32', 0),
       },
+      KAC2016: {
+        is_entry: K.ITEM('bool', 0),
+      },
+      KAC2016_skill_ranking: {
+        skill: {
+          skill: K.ITEM('s32', -1),
+          rank: K.ITEM('s32', -1),
+          total_nr: K.ITEM('s32', -1),
+        }
+      },
+     
+      
+      
+      
       nostalgia_concert: {},
       bemani_summer_2018: {
         linkage_id: K.ITEM('s32', -1),

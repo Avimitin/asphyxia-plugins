@@ -1,12 +1,14 @@
 import Logger from "../../utils/logger";
 import { CommonMusicData } from "../../models/commonmusicdata";
 
-
 export enum DATAVersion {
+  GALAXYWAVE  = "gw",
+  FUZZUP      = "fz",
   HIGHVOLTAGE = "hv",
   NEXTAGE     = "nt",
   EXCHAIN     = "ex",
-  MATTIX      = "mt"
+  MATTIX      = "mt",
+  TBRE        = "re"
 }
 
 const allowedFormats = ['.json', '.xml', '.b64']
@@ -71,6 +73,10 @@ export async function readMDBFile(path: string, processHandler?: processRawDataH
 
 export function gameVerToDataVer(ver: string): DATAVersion {
   switch(ver) {
+    case 'galaxywave':
+      return DATAVersion.GALAXYWAVE
+    case 'fuzzup':
+      return DATAVersion.FUZZUP
     case 'highvoltage':
       return DATAVersion.HIGHVOLTAGE
     case 'nextage':
@@ -78,8 +84,9 @@ export function gameVerToDataVer(ver: string): DATAVersion {
     case 'exchain':
       return DATAVersion.EXCHAIN
     case 'matixx':
-    default:
       return DATAVersion.MATTIX
+    default:
+      return DATAVersion.TBRE
   }
 }
 
@@ -157,7 +164,8 @@ export async function defaultProcessRawXmlData(path: string): Promise<CommonMusi
       cont_dm: K.ITEM('bool', dm == 0 ? 0 : 1),
       is_secret: K.ITEM('bool', m.number("is_secret", 0)),
       is_hot: K.ITEM('bool', type == 2 ? 0 : 1),
-      data_ver: K.ITEM('s32', m.number("data_ver", 115)),
+      data_ver: K.ITEM('s32', m.number("data_ver", 255)),
+      seq_release_state: K.ITEM('s32', 1),
       diff: K.ARRAY('u16', [
         d[0],
         d[1],

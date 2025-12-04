@@ -222,6 +222,26 @@ export const getPlayer: EPR = async (info, data, send) => {
       unlock_point: K.ITEM('s32', profile.unlock_point),
     },
     musiclist: { '@attr': { nr: musicdata.length }, musicdata },
+    deluxe: {
+      deluxe_content: K.ITEM('s32', 0),
+      target_id: K.ITEM('s32', 0),
+      multiply: K.ITEM('s32', 0),
+      point: K.ITEM('s32', 0),
+    },
+    galaxy_parade: {
+      score_list: {},
+      last_corner_id: K.ITEM('s32', 0),
+      chara_list: {},
+      last_sort_category: K.ITEM('s32', 0),
+      last_sort_order: K.ITEM('s32', 0),
+      team_member: {
+        chara_id_guitar: K.ITEM('s32', 0),
+        chara_id_bass: K.ITEM('s32', 0),
+        chara_id_drum: K.ITEM('s32', 0),
+        chara_id_free1: K.ITEM('s32', 0),
+        chara_id_free2: K.ITEM('s32', 0),
+      },
+    },
   };
 
   const playerRanking = await getPlayerRanking(refid, version, game)
@@ -229,6 +249,41 @@ export const getPlayer: EPR = async (info, data, send) => {
   const addition: any = {
     monstar_subjugation: {},
     bear_fes: {},
+    galaxy_parade: {
+      corner_list: {
+        corner: {
+          is_open: K.ITEM('bool', 0),
+          data_ver: K.ITEM('s32', 0),
+          genre: K.ITEM('s32', 0),
+          corner_id: K.ITEM('s32', 0),
+          corner_name: K.ITEM('str', ''),
+          start_date_ms: K.ITEM('u64', BigInt(0)),
+          end_date_ms: K.ITEM('u64', BigInt(0)),
+          requirements_musicid: K.ITEM('s32', 0),
+          reward_list: {
+            reward: {
+              reward_id: K.ITEM('s32', 0),
+              reward_kind: K.ITEM('s32', 0),
+              reward_itemid: K.ITEM('s32', 0),
+              unlock_border: K.ITEM('s32', 0),
+              }
+          },
+        }
+      },
+      gacha_table: {
+        chara_odds: {
+          chara_id: K.ITEM('s32', 0),
+          odds: K.ITEM('s32', 0),
+        }
+      },
+      bonus: {
+        term: K.ITEM('s32', 0),
+        stage_bonus: K.ITEM('s32', 0),
+        charm_bonus: K.ITEM('s32', 0),
+        start_date_ms: K.ITEM('u64', BigInt(0)),
+        end_date_ms: K.ITEM('u64', BigInt(0)),
+      }
+    },
   };
   for (let i = 1; i <= 20; ++i) {
     const obj = { point: K.ITEM('s32', 0) };

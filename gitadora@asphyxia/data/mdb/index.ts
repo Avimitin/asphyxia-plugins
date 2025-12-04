@@ -64,6 +64,13 @@ export async function readMDBFile(path: string, processHandler?: processRawDataH
       default:
         throw `Invalid MDB file type: ${fileType}. Only .json, .xml, .b64 are supported.`
   }
+  
+  // Some MDB sources may not provide seq_release_state. Ensure it is present for every song entry.
+  result.music.forEach((entry) => {
+    if (entry.seq_release_state == null) {
+      entry.seq_release_state = K.ITEM('s32', 1)
+    }
+  })
 
   let gfCount = result.music.filter((e) => e.cont_gf["@content"][0]).length
   let dmCount = result.music.filter((e) => e.cont_dm["@content"][0]).length

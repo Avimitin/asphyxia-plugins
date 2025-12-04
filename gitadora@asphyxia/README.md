@@ -29,6 +29,34 @@ Known Issues
  * Special Premium Encore on Nextage is unimplemented. However, a workaround is available. Try it.
  * Friends and Rivals are unimplemented.
 
+Shared Data Options
+===================
+Two experimental options allow operators to share data across versions:
+
+* **Shared Favorite Songs** (`shared_favorite_songs`, default: `false`): When enabled, favorite lists are unified across Guitar Freaks, DrumMania, and supported versions.
+* **Shared Song Scores** (`shared_song_scores`, default: `false`): When enabled, the server merges the best results for each chart across every stored version and saves them under a shared version identifier. The merged record uses the following shape (fields marked with `//` describe their meaning):
+
+```
+scores: {
+  "<musicid>": {
+    update: [<seq>, <new_skill>], // Highest new_skill value seen and its associated seq
+    diffs: {
+      "<seq>": {
+        perc: <number>,   // Highest achievement percentage
+        rank: <number>,   // Highest rank reached for the chart
+        clear: <boolean>, // Whether the chart has been cleared
+        fc: <boolean>,    // Whether a full combo was achieved
+        ex: <boolean>,    // Whether an excellent was achieved
+        meter: "<string>",// Best meter value as a stringified bigint
+        prog: <number>,   // Highest progression value
+      }
+    }
+  }
+}
+```
+
+Scores are stored under `version: "shared"` but are automatically applied to the active module when loading a profile, ensuring players benefit from their best combined results regardless of the client version.
+
 Release Notes
 =============
 

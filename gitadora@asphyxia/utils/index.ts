@@ -33,3 +33,7 @@ export function isAsphyxiaDebugMode() : boolean  {
 export function isSharedFavoriteMusicEnabled() : boolean{
   return  Boolean(U.GetConfig("shared_favorite_songs"))
 }
+
+export function isSharedSongScoresEnabled() : boolean{
+  return  Boolean(U.GetConfig("shared_song_scores"))
+}

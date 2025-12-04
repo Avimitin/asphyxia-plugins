@@ -10,7 +10,7 @@ import { getDefaultScores, Scores } from "../models/scores";
 
 import { PLUGIN_VER } from "../const";
 import Logger from "../utils/logger"
-import { isAsphyxiaDebugMode } from "../utils/index";
+import { isAsphyxiaDebugMode, isSharedSongScoresEnabled } from "../utils/index";
 import { SecretMusicEntry } from "../models/secretmusicentry";
 import { CheckPlayerResponse, getCheckPlayerResponse } from "../models/Responses/checkplayerresponse";
 import { getPlayerStickerResponse, PlayerStickerResponse } from "../models/Responses/playerstickerresponse";
@@ -20,6 +20,7 @@ import { getDefaultBattleDataResponse } from "../models/Responses/battledataresp
 import { applySharedFavoriteMusicToExtra, saveSharedFavoriteMusicFromExtra } from "./FavoriteMusic";
 import { getPlayerRecordResponse } from "../models/Responses/playerrecordresponse";
 import { getPlayerPlayInfoResponse, PlayerPlayInfoResponse } from "../models/Responses/playerplayinforesponse";
+import { getMergedSharedScores, mergeScoresIntoShared } from "./SharedScores";
 
 const logger = new Logger("profiles")
 
@@ -72,6 +73,7 @@ export const getPlayer: EPR = async (info, data, send) => {
   const time = BigInt(31536000);
   const dm = isDM(info);
   const game = dm ? 'dm' : 'gf';
+  const sharedScoresEnabled = isSharedSongScoresEnabled();
 
   logger.debugInfo(`Loading ${game} profile for player ${no} with refid: ${refid}`)
   const name = await DB.FindOne<PlayerInfo>(refid, {
@@ -84,8 +86,8 @@ export const getPlayer: EPR = async (info, data, send) => {
   const gfRecord = await getRecord(refid, version, 'gf')
   const dmExtra = await getExtra(refid, version, 'dm')
   const gfExtra = await getExtra(refid, version, 'gf')
-  const dmScores = (await getScore(refid, version, 'dm')).scores
-  const gfScores = (await getScore(refid, version, 'gf')).scores
+  const dmScores = sharedScoresEnabled ? await getMergedSharedScores(refid, 'dm') : (await getScore(refid, version, 'dm')).scores
+  const gfScores = sharedScoresEnabled ? await getMergedSharedScores(refid, 'gf') : (await getScore(refid, version, 'gf')).scores
 
   const profile = dm ? dmProfile : gfProfile;
   const extra = dm ? dmExtra : gfExtra;
@@ -524,6 +526,7 @@ export const savePlayers: EPR = async (info, data, send) => {
   const version = getVersion(info);
   const dm = isDM(info);
   const game = dm ? 'dm' : 'gf';
+  const sharedScoresEnabled = isSharedSongScoresEnabled();
 
   let players = $(data).elements("player")
 
@@ -549,7 +552,7 @@ export const savePlayers: EPR = async (info, data, send) => {
         throw "Request data is missing required parameter: player.refid"
       }
 
-      await saveSinglePlayer(player, refid, no, version, game);
+      await saveSinglePlayer(player, refid, no, version, game, sharedScoresEnabled);
 
       let ranking = await getPlayerRanking(refid, version, game)
       let responsePart = getSaveProfileResponse(no, ranking)
@@ -569,7 +572,7 @@ export const savePlayers: EPR = async (info, data, send) => {
   }
 };
 
-async function saveSinglePlayer(dataplayer: KDataReader, refid: string, no: number, version: string, game: 'gf' | 'dm')
+async function saveSinglePlayer(dataplayer: KDataReader, refid: string, no: number, version: string, game: 'gf' | 'dm', sharedScoresEnabled: boolean)
 {
   logger.debugInfo(`Saving ${game} profile for player ${no} with refid: ${refid}`)
   const profile = await getProfile(refid, version, game) as any;
@@ -712,7 +715,11 @@ async function saveSinglePlayer(dataplayer: KDataReader, refid: string, no: numb
   logStagesPlayed(playedStages)
   
   const scores = await updatePlayerScoreCollection(refid, playedStages, version, game)
-  await saveScore(refid, version, game, scores); 
+  await saveScore(refid, version, game, scores);
+
+  if (sharedScoresEnabled) {
+    await mergeScoresIntoShared(refid, game, scores);
+  }
   await saveSharedFavoriteMusicFromExtra(refid, extra)
 }
 

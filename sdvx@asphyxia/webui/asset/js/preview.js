@@ -1,3 +1,5 @@
+
+
 function zeroPad(num, places) {
     let zero = places - num.toString().length + 1;
     return Array(+(zero > 0 && zero)).join("0") + num;
@@ -9,7 +11,7 @@ const preloadImage = src =>
         image.onload = resolve
         image.onerror = reject
         image.src = src
-})
+    })
 
 function generateElements(html) {
     const template = document.createElement('template');
@@ -21,13 +23,17 @@ function isSlideShow(num){
     return database["subbg"].filter(x => x.value == num)[0]["multi"] ?? false;
 }
 
-function isScroll(num){ //238-255 200-213
-    if((num >= 238 && num <= 255 )|| (num>=200 && num <=213)){
-        return true;
-    }else{
-        return false;
-    }
+function isScroll(num){
+    return database["subbg"].filter(x => x.value == num)[0]["scroll"] ?? false;
 }
+
+// function isScroll(num){ //238-255 200-213
+//     if((num >= 238 && num <= 255 )|| (num>=200 && num <=213)){
+//         return true;
+//     }else{
+//         return false;
+//     }
+// }
 
 function isVideo(num){
     return database["subbg"].filter(x => x.value == num)[0]["video"] ?? false;
@@ -88,6 +94,8 @@ subbg_select.addEventListener('change', ()=>{
     preview_fade.classList.toggle('fade');
     clearInterval(interval);
     cnt = 1;
+
+    
     
     setTimeout(()=>{
         preview.classList.toggle('fade');
@@ -98,6 +106,12 @@ subbg_select.addEventListener('change', ()=>{
             preview.setAttribute("src", "static/asset/submonitor_bg/subbg_" + zeroPad(value, 4) + ".png");
         }
     },500);
+
+    if(isScroll(value)){
+        preview.classList.add('scroll');
+    }else{
+        preview.classList.remove('scroll');
+    }
 
     if(isSlideShow(value)){ 
         interval = setInterval(()=>{
@@ -155,7 +169,7 @@ subbg_select.addEventListener('change', ()=>{
 let audioContext = new AudioContext();
 let play = audioContext.createBufferSource();
 let gain = audioContext.createGain();
-
+let biquadFilter = audioContext.createBiquadFilter();
 play.connect(gain);
 gain.connect(audioContext.destination);
 gain.gain.value = 0.5;
@@ -186,7 +200,13 @@ $('[name="bgm"]').change(function() {
             play = audioContext.createBufferSource();
             gain = audioContext.createGain();
             play.connect(gain);
-            gain.connect(audioContext.destination);
+            biquadFilter = audioContext.createBiquadFilter();
+            gain.connect(biquadFilter);
+            // filter.connect(context.destination);
+            biquadFilter.type = "highpass";
+            biquadFilter.frequency.value = 0;
+
+            biquadFilter.connect(audioContext.destination);
             gain.gain.value = 0.2;
             play.buffer = audioBuffer;
             play.loop = true;
@@ -352,17 +372,20 @@ $('[name="stampD_R"]').change(function() {
 });
 
 let disable_bg = false;
-
+const transpose = window.mp4Transpose;
 $('[name="mainbg"]').change(function() {
+    let video = document.querySelector('#mainbg_video_pre');
+    let img = document.querySelector('#mainbg_img_pre');
+
     let filestr = ""
     disable_bg = false;
     let bg_color = document.querySelector('.card').style["background-color"]
     document.querySelector('.card').style["background-color"] = bg_color.length == 9 ? bg_color.substring(0, bg_color.length - 2) + "99" : bg_color;
     switch($('[name="mainbg"]').val()){
         case "0":
-            filestr = ""
-            disable_bg = true;
-            document.querySelector('.card').style["background-color"] = bg_color.length == 9 ? bg_color.substring(0, bg_color.length - 2) : bg_color;
+            filestr = "default"
+            // disable_bg = true;
+            // document.querySelector('.card').style["background-color"] = bg_color.length == 9 ? bg_color.substring(0, bg_color.length - 2) : bg_color;
             break;
         case "1":
             filestr = "booth"
@@ -371,11 +394,26 @@ $('[name="mainbg"]').change(function() {
             filestr = "ii"
             break;
         case "3":
-            filestr = "iii"
+            filestr = "iii";
+            break
+        case "17":
+            filestr = "iiis2"
+            break;
+        case "18":
+            filestr = "iv"
+            break;
+        case "19":
+            filestr = "v"
+            break;
+        default:
+            filestr = "sysbg_" + zeroPad($('[name="mainbg"]').val(), 4);
             break;
     }
 
-    let video = document.querySelector('#mainbg_video_pre');
+    
+    img.setAttribute("src", "static/asset/main_bg/"+filestr+".png");
+    
+    
     // video.setAttribute("style", "")
     video.setAttribute("src", 'static/asset/video/'+filestr+'.mp4');
     video.setAttribute("autoplay", "");
@@ -466,6 +504,9 @@ document.addEventListener('DOMContentLoaded', function() {
             let support_team = document.querySelector('[name="support_team"]');
             support_team.value = profile_data["support_team"];
 
+            let use_pro_team = document.querySelector('[name="use_pro_team"]');
+            use_pro_team.checked = profile_data["use_pro_team"];
+
             let stampA = document.querySelector('[name="stampA"]');
             let stampB = document.querySelector('[name="stampB"]');
             let stampC = document.querySelector('[name="stampC"]');
@@ -513,6 +554,8 @@ document.addEventListener('DOMContentLoaded', function() {
             mainbg.innerHTML = mainbg_option;
             mainbg.value = profile_data["mainbg"];
             mainbg.dispatchEvent(new Event('change'));
+
+            
 
             setTimeout(()=>{
                 document.querySelector('#mainbg_video_pre').play();
@@ -574,22 +617,22 @@ document.addEventListener('DOMContentLoaded', function() {
     let play_bg_button = generateElements('<button class="button is-primary" type="button" id="play_bg"><button>');
     play_bg_button.append("BG SHOW");
     play_bg_button.addEventListener('click', function() {
-        if(!disable_bg){
-            let video = document.querySelector('#mainbg_video_pre');
-            video.play();
+        
+        let video = document.querySelector('#mainbg_video_pre');
+        video.play();
 
+        let card = document.querySelector('.card');
+        card.style["opacity"] = "0";
+        card.style["transition"] = "opacity 0.5s";
+
+        let bg_ui_blocker = generateElements('<div id="bguiblocker" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: #000000; opacity: 0; z-index: 9999;"></div>');
+        document.querySelector('body').append(bg_ui_blocker);
+        document.querySelector('#bguiblocker').addEventListener('click', ()=>{
             let card = document.querySelector('.card');
-            card.style["opacity"] = "0";
-            card.style["transition"] = "opacity 0.5s";
-
-            let bg_ui_blocker = generateElements('<div id="bguiblocker" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: #000000; opacity: 0; z-index: 9999;"></div>');
-            document.querySelector('body').append(bg_ui_blocker);
-            document.querySelector('#bguiblocker').addEventListener('click', ()=>{
-                let card = document.querySelector('.card');
-                card.style["opacity"] = "1";
-                document.querySelector('#bguiblocker').remove();
-            });
-        }
+            card.style["opacity"] = "1";
+            document.querySelector('#bguiblocker').remove();
+        });
+        
     });
 
     let play_bg_outer_div = generateElements('<div class="buttons" style="border-top:2px solid #333333;padding-top: 10px; margin-right: 20px;"></div>');
@@ -603,3 +646,25 @@ document.querySelector('#mainbg_video_pre').addEventListener('click', ()=>{
     card.style["opacity"] = "1";
 });
 
+let easter_egg = "filter"
+let entered = ""
+
+document.addEventListener('keydown', function(event) {
+    entered += event.key
+
+    if(easter_egg.includes(entered)){
+        if(entered == easter_egg){
+            $("#bgm_pre").append(
+                $('<input class="slider is-fullwidth is-success is-circle" step="1" min="0" max="3000" value="300" type="range">')
+                    .on('input',function(e){
+                        biquadFilter.frequency.value = e.target.value;
+                    })
+            )
+            // .append(
+            //     $('<div class="select">').append()
+                    
+            // );
+            entered = ""
+        }
+    }
+})

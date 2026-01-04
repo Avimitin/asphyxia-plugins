@@ -5,9 +5,9 @@ import { getVersion, IDToCode, GetCounter } from '../utils';
 import { Mix } from '../models/mix';
 import { fstat } from 'fs';
 import { error } from 'console';
-import { setMaxIdleHTTPParsers } from 'http';
 import { unpackS3P } from '../s3p';
-import { secureHeapUsed } from 'crypto';
+import { music_db } from '..';
+import { zipFolderToFile } from '../utils/zip';
 
 export const updateProfile = async (data: {
   refid: string;
@@ -28,6 +28,7 @@ export const updateProfile = async (data: {
   mainbg?: string;
   appeal_frame?: string;
   support_team?: string;
+  use_pro_team?: string;
 }) => {
   if (data.refid == null) return;
 
@@ -121,6 +122,16 @@ export const updateProfile = async (data: {
     if (!_.isNaN(validMainbg)) update.mainbg = validMainbg;
   }
 
+  console.log(data.use_pro_team);
+
+  if (data.use_pro_team !== undefined && data.use_pro_team == "on") {
+    const validUseProTeam = true;
+    update.use_pro_team = validUseProTeam;
+  } else {
+    const validUseProTeam = false;
+    update.use_pro_team = validUseProTeam;
+  }
+
   await DB.Update<Profile>(
     data.refid,
     { collection: 'profile' },
@@ -140,10 +151,6 @@ export const updateMix = async (data: {
   }
 
   if (data.creator && data.creator.length > 0) {
-    // const validCreator = data.creator
-    //   .toUpperCase()
-    //   .replace(/[^ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!?#$&*\-\.\ ]/g, '')
-    //   .slice(0, 8);
     if (data.creator.length > 0) update.creator = data.creator;
   }
 
@@ -237,7 +244,6 @@ export const import_assets = async (data: { path: string }, send: WebUISend) => 
   
   // await init(wasmUrl);
   // let ffmpeg = await Wasmer.fromRegistry("wasmer/ffmpeg");
-  let Admzip = require('../../_shared/lib/adm-zip')
   let path = data.path
   console.log(path)
   let fs = require('fs')
@@ -266,17 +272,14 @@ export const import_assets = async (data: { path: string }, send: WebUISend) => 
     return 
   }
 
-  let zip = new Admzip()
-  await fs.promises.readdir(path + "/data/sound/custom").then((files: any) => {
-    // let file = files[0]
-    console.log(files)
+  const files = await fs.promises.readdir(path + "/data/sound/custom")
+  console.log(files)
 
-    for(let i in files){
-      let file = files[i]
-      if(file.endsWith('.s3p')){
-        fs.mkdirSync('./plugins/sdvx@asphyxia/webui/asset/temp/'+file, { recursive: true });
-        // fs.mkdirSync('./plugins/sdvx@asphyxia/webui/asset/audio/'+file.substring(0, 9), { recursive: true });
-        unpackS3P('./plugins/sdvx@asphyxia/webui/asset/temp/'+file, path + "/data/sound/custom/" + file, {})
+  for (const file of files) {
+    if (file.endsWith('.s3p')) {
+      fs.mkdirSync('./plugins/sdvx@asphyxia/webui/asset/temp/' + file, { recursive: true });
+      // fs.mkdirSync('./plugins/sdvx@asphyxia/webui/asset/audio/'+file.substring(0, 9), { recursive: true });
+      unpackS3P('./plugins/sdvx@asphyxia/webui/asset/temp/' + file, path + "/data/sound/custom/" + file, {})
         // fs.promises.readFileSync('./plugins/sdvx@asphyxia/webui/asset/temp/'+file+'/0.wma').then(async (data: any) => {
           // const instance = await ffmpeg.entrypoint.run({
           //   args: ["-i", "-", "-f", "wav", "-"],
@@ -299,16 +302,13 @@ export const import_assets = async (data: { path: string }, send: WebUISend) => 
           //   console.log(err)
           // })
         // }
-      }
     }
+  }
 
-
-
-    
-  }).finally(() => {
-    
-    zip.addLocalFolder('./plugins/sdvx@asphyxia/webui/asset/temp', 'temp')
-    zip.writeZip('./plugins/sdvx@asphyxia/webui/asset/temp.zip')
+  await zipFolderToFile({
+    sourceDir: './plugins/sdvx@asphyxia/webui/asset/temp',
+    outZipPath: './plugins/sdvx@asphyxia/webui/asset/temp.zip',
+    rootInZip: 'temp',
   })
 
   await fs.promises.rm('./plugins/sdvx@asphyxia/webui/asset/temp', { recursive: true, force: true }).catch((err: any) => {
@@ -465,4 +465,17 @@ export const update_webui_bgm_data = async (data: any, send: WebUISend) => {
 
   fs.writeFileSync("./plugins/sdvx@asphyxia/webui/asset/json/data.json", JSON.stringify(datajson, null, 2))
   send.json({status:"ok"})
+}
+
+export const update_music_db = async (data: any, send: WebUISend) => {
+  const fs = require('fs')
+  data = JSON.parse(U.parseXML(data.file, false))
+
+  fs.writeFileSync("./plugins/sdvx@asphyxia/webui/asset/json/music_db.json", JSON.stringify(data, null, 2))
+}
+
+
+export const sendMdb = async (data: any, send: WebUISend) => {
+  console.log('Sending music_db to WebUI...')
+  send.json(music_db)
 }

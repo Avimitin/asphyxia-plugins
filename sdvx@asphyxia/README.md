@@ -1,10 +1,14 @@
 # SOUND VOLTEX
 
-Plugin Version: **v6.1.2**
+Plugin Version: **v6.2.0**
 
 ## Provide out of box usable exprience, everything is unlocked and good to go.  
 
-Prerequisite CORE version: v1.50c or above
+# For full expreience on webui, make sure to copy music database to root of sdvx plugin folder.
+# Other assets like chat stamps, nemsys avatars, submonitor backgrounds should also be copied to webui/asset folder respectively.
+# Currently EG Final data for the webui is not fully updated, you might need to update the entry manually if you want customizes.
+
+Prerequisite CORE version: v1.50d or above
 
 Supported Versions:
 
@@ -32,6 +36,10 @@ Remember to import asset from the game files first time when using webui.
 
 Change Log
 ===========
+
+## 6.2.0
+
+1. Support EG Final 2025120900.
 
 ## 6.1.2
 

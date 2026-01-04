@@ -1,8 +1,5 @@
 import {common,log} from './handlers/common';
 import {hiscore, rival, saveMix, loadMix, globalMatch} from './handlers/features';
-// import {} from './handlers/sv4/';
-// import {} from './handlers/sv5/';
-// import {} from './handlers/sv6/';
 import {
   updateProfile,
   updateMix,
@@ -13,7 +10,9 @@ import {
   update_webui_nemsys_data,
   update_webui_stamp_data,
   update_webui_subbg_data,
-  update_webui_bgm_data
+  update_webui_bgm_data,
+  update_music_db,
+  sendMdb,
   // sendImg,
   // sendImgWithID,
   // getScore,
@@ -31,23 +30,27 @@ import {
   print,
 } from './handlers/profiles';
 
-import { MusicRecord } from './models/music_record';
+import { TRANSLATION_TABLE } from './utils';
 
-enum Version{
-  Booth = 'game.',
-  II = 'game_2.',
-  GW = 'game_3.',
-  HH = 'game.sv4_',
-  VW = 'game.sv5_',
-  EG = 'game.sv6_',
-}
+import { MusicRecord } from './models/music_record';
 
 export let music_db;
 
 function load_music_db(){
-  IO.ReadFile('./webui/asset/json/music_db.json',{encoding:'utf8'}).then(data => {
-    music_db = JSON.parse(data);
+  IO.ReadFile('./music_db.xml').then(data => {
+    let mdb_buffer = U.DecodeString(data, 'shift_jis');
+    music_db = U.parseXML(mdb_buffer, false);
     console.log('music_db loaded, total: '+music_db.mdb.music.length);
+
+    music_db.mdb.music.forEach((m: any) => {
+      let title_name = m.info.title_name["@content"];
+
+      for(let [key, value] of Object.entries(TRANSLATION_TABLE)){
+        title_name = title_name.replaceAll(key, value);
+      }
+
+      m.info.title_name["@content"] = title_name;
+    })
   })
 }
 
@@ -56,6 +59,7 @@ export function register() {
   R.Contributor("LatoWolf");
   R.GameCode('KFC');
 
+  R.Config('enable_VSync', { type: 'boolean', default: false, name:'Enable VSync'} );
   R.Config('unlock_all_songs', { type: 'boolean', default: false, name:'Unlock All Songs'});
   R.Config('unlock_all_navigators', { type: 'boolean', default: false, name:'Unlock All Navigators'} );
   R.Config('unlock_all_appeal_cards', { type: 'boolean', default: false, name:'Unlock All Appeal Cards'});
@@ -63,7 +67,7 @@ export function register() {
   R.Config('use_asphyxia_gameover',{ type: 'boolean', default: true, name:'Use Asphyxia Gameover', desc:'Enable the Asphyxia gameover message after ending the game.'})
   R.Config('use_blasterpass',{ type: 'boolean', default: true, name:'Use Blaster Pass', desc:'Enable Blaster Pass for VW and EG'});
   R.Config('new_year_special',{ type: 'boolean', default: true, name:'Use New Year Special', desc:'Enable New Year Special BGM for login'});
-  R.Config('music_count',{ type: 'integer', default: 2200, name:'Music Count', desc:'The maximum id of music in the game.'});
+  R.Config('music_count',{ type: 'integer', default: 2500, name:'Music Count', desc:'The maximum id of music in the game.'});
     
   R.WebUIEvent('updateProfile', updateProfile);
   R.WebUIEvent('updateMix', updateMix);
@@ -75,9 +79,12 @@ export function register() {
   R.WebUIEvent('update_webui_chat_stamp', update_webui_stamp_data);
   R.WebUIEvent('update_webui_subbg', update_webui_subbg_data);
   R.WebUIEvent('update_webui_bgm', update_webui_bgm_data);
+  R.WebUIEvent('update_music_db', update_music_db);
+  R.WebUIEvent('getMusicDB', sendMdb);
 
   const MultiRoute = (method: string, handler: EPR | boolean) => {
     R.Route(`game.sv6_${method}`, handler);
+    R.Route(`game.sv7_${method}`, handler);
   };
   
 
@@ -140,4 +147,8 @@ export function register() {
 
 
   R.Unhandled();
+
+  if (IO.Exists('./music_db.xml')) {
+    load_music_db();
+  }
 }

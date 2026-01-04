@@ -80,7 +80,7 @@ function getSongLevel(musicid, type) {
     //console.log(music_db["mdb"]["music"])
     // console.log(musicid + " " + type);
     // console.log(musicid)
-    let result = music_db["mdb"]["music"].filter(object => object["@id"] == musicid);
+    let result = music_db["mdb"]["music"].filter(object => object["@attr"]["id"] == musicid);
     // console.log(result[0]["difficulty"]["novice"]["difnum"]["#text"])
     if (result.length == 0) {
         return "1"
@@ -91,34 +91,44 @@ function getSongLevel(musicid, type) {
     switch (type) {
         case 0:
             if (result[0]["difficulty"]["novice"] !== undefined)
-                diffnum = result[0]["difficulty"]["novice"]["difnum"]["#text"]
+                diffnum = result[0]["difficulty"]["novice"]["difnum"]["@content"]
                 // return result[0]["difficulty"]["novice"]["difnum"]["#text"]
             break;
         case 1:
             if (result[0]["difficulty"]["advanced"] !== undefined)
-                diffnum = result[0]["difficulty"]["advanced"]["difnum"]["#text"]
+                diffnum = result[0]["difficulty"]["advanced"]["difnum"]["@content"]
                 // return result[0]["difficulty"]["advanced"]["difnum"]["#text"]
             break;
         case 2:
             if (result[0]["difficulty"]["exhaust"] !== undefined)
-                diffnum = result[0]["difficulty"]["exhaust"]["difnum"]["#text"]
+                diffnum = result[0]["difficulty"]["exhaust"]["difnum"]["@content"]
                 // return result[0]["difficulty"]["exhaust"]["difnum"]["#text"]
             break;
         case 3:
             if (result[0]["difficulty"]["infinite"] !== undefined)
-                diffnum = result[0]["difficulty"]["infinite"]["difnum"]["#text"]
+                diffnum = result[0]["difficulty"]["infinite"]["difnum"]["@content"]
                 // return result[0]["difficulty"]["infinite"]["difnum"]["#text"]
             break;
         case 4:
             if (result[0]["difficulty"]["maximum"] !== undefined)
-                diffnum = result[0]["difficulty"]["maximum"]["difnum"]["#text"]
+                diffnum = result[0]["difficulty"]["maximum"]["difnum"]["@content"]
                 // return result[0]["difficulty"]["maximum"]["difnum"]["#text"]
+            break;
+        case 5:
+            if (result[0]["difficulty"]["ultimate"] !== undefined)
+                diffnum = result[0]["difficulty"]["ultimate"]["difnum"]["@content"]
+                // return result[0]["difficulty"]["ultimate"]["difnum"]["#text"]
             break;
     }
     // console.log(diffnum)
     if (diffnum == 0) {
         diffnum = 1;
     }
+
+    
+    diffnum /= 10;
+    
+
     // console.log(diffnum)
     return diffnum;
     // return result[0]["info"]["title_name"]
@@ -167,14 +177,14 @@ function singleScoreVolforce(score) {
     // lv * (score / 10000000) * gradeattr * clearmedalattr * 2
     let level = getSongLevel(score.mid, score.type);
     // console.log(level);
-    let tempVF = parseInt(level) * (parseInt(score.score) / 10000000) * getGrade(score.grade) * getMedal(score.clear) * 2;
+    let tempVF = parseFloat(level) * (parseInt(score.score) / 10000000) * getGrade(score.grade) * getMedal(score.clear) * 2;
     // console.log(tempVF);
     return tempVF;
 }
 
 function toFixed(num, fixed) {
     let re = new RegExp('^-?\\d+(?:\.\\d{0,' + (fixed || -1) + '})?');
-    return num.toString().match(re)[0];
+    return num.toString().match(re)?.[0] ?? '0.0';
 }
 
 function calculateVolforce() {
@@ -426,12 +436,35 @@ function setUpStatistics() {
 
     score_db.forEach(function(currentValue, index, array) {
         //console.log(currentValue);
-        CMpDArray[currentValue.type][currentValue.clear - 1] += 1;
-        CMpLArray[parseInt(getSongLevel(currentValue.mid, currentValue.type)) - 1][currentValue.clear - 1] += 1;
-        GpDArray[currentValue.type][currentValue.grade - 1]++;
-        GpLArray[parseInt(getSongLevel(currentValue.mid, currentValue.type)) - 1][currentValue.grade - 1] += 1;
-        ASpLArray[parseInt(getSongLevel(currentValue.mid, currentValue.type)) - 1][0] += 1;
-        ASpLArray[parseInt(getSongLevel(currentValue.mid, currentValue.type)) - 1][1] += currentValue.score;
+        const type = Number(currentValue.type);
+        if (!Number.isFinite(type) || type < 0 || type >= 5) {
+            return;
+        }
+
+        const clear = Number(currentValue.clear);
+        const clearIndex = Number.isFinite(clear) ? clear - 1 : -1;
+
+        const rawLevel = parseInt(getSongLevel(currentValue.mid, type), 10);
+        let level = Number.isFinite(rawLevel) ? rawLevel : 1;
+        if (level < 1) level = 1;
+        if (level > 20) level = 20;
+        const levelIndex = level - 1;
+
+        const grade = Number(currentValue.grade);
+        const gradeIndex = Number.isFinite(grade) ? grade - 1 : -1;
+
+        if (clearIndex >= 0 && clearIndex < 5) {
+            CMpDArray[type][clearIndex] += 1;
+            CMpLArray[levelIndex][clearIndex] += 1;
+        }
+
+        if (gradeIndex >= 0 && gradeIndex < 10) {
+            GpDArray[type][gradeIndex] += 1;
+            GpLArray[levelIndex][gradeIndex] += 1;
+        }
+
+        ASpLArray[levelIndex][0] += 1;
+        ASpLArray[levelIndex][1] += Number(currentValue.score) || 0;
     });
 
     // console.log(CMpDArray);
@@ -642,7 +675,8 @@ $('#version_select').change(function() {
 function getPlayerSkill(version) {
     // console.log(getPlayerMaxVersion())
     if (skill_data.length == 0) return 0;
-    let k = skill_data.filter(e => e.version == version)
+    let k = skill_data.filter(e => e.version == version);
+    if (k.length === 0 || k[0] == undefined) return 0;
     return parseInt(k[0].level);
 }
 
@@ -655,7 +689,7 @@ function getVersionSelect() {
     return versionDATA;
 }
 
-$(document).ready(function() {
+$(function() {
     profile_data = JSON.parse(document.getElementById("data-pass").innerText);
     score_db = JSON.parse(document.getElementById("score-pass").innerText);
     skill_data = JSON.parse(document.getElementById("skill-pass").innerText);
@@ -673,9 +707,12 @@ $(document).ready(function() {
     // )
 
     $.when(
-        $.getJSON("static/asset/json/music_db.json", function(json) {
-            music_db = json;
-            // console.log(music_db);
+        // $.getJSON("static/asset/json/music_db.json", function(json) {
+        //     music_db = json;
+        //     // console.log(music_db);
+        // }),
+        axios.post('/emit/getMusicDB').then(function (response) {
+            music_db = response.data;
         }),
         $.getJSON("static/asset/json/course_data.json", function(json) {
             course_db = json;

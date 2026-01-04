@@ -10,4 +10,5 @@ export interface MusicRecord {
   buttonRate: number;
   longRate: number;
   volRate: number;
+  volforce: number;
 }

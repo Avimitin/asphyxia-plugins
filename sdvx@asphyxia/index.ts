@@ -84,7 +84,6 @@ export function register() {
 
   const MultiRoute = (method: string, handler: EPR | boolean) => {
     R.Route(`game.sv6_${method}`, handler);
-    R.Route(`game.sv7_${method}`, handler);
   };
   
 

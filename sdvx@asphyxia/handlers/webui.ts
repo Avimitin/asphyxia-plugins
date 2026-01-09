@@ -8,6 +8,12 @@ import { error } from 'console';
 import { unpackS3P } from '../s3p';
 import { music_db } from '..';
 import { zipFolderToFile } from '../utils/zip';
+import path from 'path';
+
+const joinUnder = (basePath: string, childPath: string) => {
+  const sanitizedChild = (childPath ?? '').replace(/^[/\\]+/, '');
+  return path.join(basePath, sanitizedChild);
+};
 
 export const updateProfile = async (data: {
   refid: string;
@@ -244,42 +250,46 @@ export const import_assets = async (data: { path: string }, send: WebUISend) => 
   
   // await init(wasmUrl);
   // let ffmpeg = await Wasmer.fromRegistry("wasmer/ffmpeg");
-  let path = data.path
-  console.log(path)
+  const sdvxInstallPath = data.path;
+  console.log(sdvxInstallPath)
   let fs = require('fs')
-  if (!fs.existsSync(path + '/data/graphics/')) {
+
+  const graphicsDir = path.join(sdvxInstallPath, 'data', 'graphics');
+  if (!fs.existsSync(graphicsDir)) {
     console.log('Path for Graphics does not exist.')
     send.error(400,'Path for Graphics does not exist.')
     return 
   }
 
-  await fs.promises.cp(path + "/data/graphics/ap_card", './plugins/sdvx@asphyxia/webui/asset/ap_card', {recursive: true}).catch((err: any) => {
+  await fs.promises.cp(path.join(graphicsDir, 'ap_card'), './plugins/sdvx@asphyxia/webui/asset/ap_card', {recursive: true}).catch((err: any) => {
     console.log(err)
   })
-  await fs.promises.cp(path + "/data/graphics/chat_stamp", './plugins/sdvx@asphyxia/webui/asset/chat_stamp', {recursive: true}).catch((err: any) => {
+  await fs.promises.cp(path.join(graphicsDir, 'chat_stamp'), './plugins/sdvx@asphyxia/webui/asset/chat_stamp', {recursive: true}).catch((err: any) => {
     console.log(err)
   })
-  await fs.promises.cp(path + "/data/graphics/game_nemsys", './plugins/sdvx@asphyxia/webui/asset/nemsys', {recursive: true}).catch((err: any) => {
+  await fs.promises.cp(path.join(graphicsDir, 'game_nemsys'), './plugins/sdvx@asphyxia/webui/asset/nemsys', {recursive: true}).catch((err: any) => {
     console.log(err)
   })
-  await fs.promises.cp(path + "/data/graphics/submonitor_bg", './plugins/sdvx@asphyxia/webui/asset/submonitor_bg', {recursive: true}).catch((err: any) => {
+  await fs.promises.cp(path.join(graphicsDir, 'submonitor_bg'), './plugins/sdvx@asphyxia/webui/asset/submonitor_bg', {recursive: true}).catch((err: any) => {
     console.log(err)
   })
 
-  if (!fs.existsSync(path + '/data/sound/')) {
+  const soundDir = path.join(sdvxInstallPath, 'data', 'sound');
+  if (!fs.existsSync(soundDir)) {
     console.log('Path for sound does not exist.')
     send.error(400,'Path for sound does not exist.')
     return 
   }
 
-  const files = await fs.promises.readdir(path + "/data/sound/custom")
+  const customSoundDir = path.join(soundDir, 'custom');
+  const files = await fs.promises.readdir(customSoundDir)
   console.log(files)
 
   for (const file of files) {
     if (file.endsWith('.s3p')) {
       fs.mkdirSync('./plugins/sdvx@asphyxia/webui/asset/temp/' + file, { recursive: true });
       // fs.mkdirSync('./plugins/sdvx@asphyxia/webui/asset/audio/'+file.substring(0, 9), { recursive: true });
-      unpackS3P('./plugins/sdvx@asphyxia/webui/asset/temp/' + file, path + "/data/sound/custom/" + file, {})
+      unpackS3P('./plugins/sdvx@asphyxia/webui/asset/temp/' + file, path.join(customSoundDir, file), {})
         // fs.promises.readFileSync('./plugins/sdvx@asphyxia/webui/asset/temp/'+file+'/0.wma').then(async (data: any) => {
           // const instance = await ffmpeg.entrypoint.run({
           //   args: ["-i", "-", "-f", "wav", "-"],
@@ -478,4 +488,32 @@ export const update_music_db = async (data: any, send: WebUISend) => {
 export const sendMdb = async (data: any, send: WebUISend) => {
   console.log('Sending music_db to WebUI...')
   send.json(music_db)
+}
+
+export const sendAssetData = async ( data: { path: string }, send: WebUISend) => {
+  if (U.GetConfig('sdvx_path') == '') {
+    send.error(400, 'SDVX Path is not set in the plugin configuration.');
+    return;
+  }
+
+  let sdvx_path = U.GetConfig('sdvx_path');
+
+  const full_path = joinUnder(sdvx_path, data.path);
+  
+  const fs = require('fs');
+
+  if (!fs.existsSync(full_path)) {
+    send.error(404, 'File not found');
+    return;
+  }
+
+  try {
+    const asset_data: Buffer = await fs.promises.readFile(full_path);
+    console.log(asset_data.length);
+    console.log('Sending asset file: ' + full_path);
+    send.buffer(asset_data);
+  } catch (e) {
+    console.log(e);
+    send.error(500, 'Failed to read file');
+  }
 }

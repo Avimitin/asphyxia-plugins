@@ -274,7 +274,9 @@ $(function() {
                             let data = row.data();
                             return 'Details for ' + data.songname;
                         }
-                    })
+                    }),
+                    type: 'column',
+                    target: 1
                 }
             },
             scrollY: "400px",

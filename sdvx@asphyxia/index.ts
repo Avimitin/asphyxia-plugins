@@ -13,6 +13,7 @@ import {
   update_webui_bgm_data,
   update_music_db,
   sendMdb,
+  sendAssetData,
   // sendImg,
   // sendImgWithID,
   // getScore,
@@ -34,10 +35,25 @@ import { TRANSLATION_TABLE } from './utils';
 
 import { MusicRecord } from './models/music_record';
 
+import path from 'path';
+
 export let music_db;
 
 function load_music_db(){
-  IO.ReadFile('./music_db.xml').then(data => {
+
+  const fs = require('fs');
+
+  if (U.GetConfig('sdvx_path') == '') {
+    console.log('sdvx_path is not set, skipping music_db load');
+    return;
+  }
+
+  let sdvx_path = U.GetConfig('sdvx_path');
+
+  const mdb_path = path.join(sdvx_path, 'data', 'others', 'music_db.xml');
+
+
+  fs.promises.readFile(mdb_path).then(data => {
     let mdb_buffer = U.DecodeString(data, 'shift_jis');
     music_db = U.parseXML(mdb_buffer, false);
     console.log('music_db loaded, total: '+music_db.mdb.music.length);
@@ -52,6 +68,9 @@ function load_music_db(){
       m.info.title_name["@content"] = title_name;
     })
   })
+  .catch((err: any) => {
+    console.error('Error reading music_db.xml:', err);
+  });
 }
 
 export function register() {
@@ -68,6 +87,8 @@ export function register() {
   R.Config('use_blasterpass',{ type: 'boolean', default: true, name:'Use Blaster Pass', desc:'Enable Blaster Pass for VW and EG'});
   R.Config('new_year_special',{ type: 'boolean', default: true, name:'Use New Year Special', desc:'Enable New Year Special BGM for login'});
   R.Config('music_count',{ type: 'integer', default: 2500, name:'Music Count', desc:'The maximum id of music in the game.'});
+
+  R.Config('sdvx_path', { type: 'string', default: '', name:'SDVX Path', desc:'Path to your SDVX installation folder.'});
     
   R.WebUIEvent('updateProfile', updateProfile);
   R.WebUIEvent('updateMix', updateMix);
@@ -81,6 +102,7 @@ export function register() {
   R.WebUIEvent('update_webui_bgm', update_webui_bgm_data);
   R.WebUIEvent('update_music_db', update_music_db);
   R.WebUIEvent('getMusicDB', sendMdb);
+  R.WebUIEvent('getAssetData', sendAssetData);
 
   const MultiRoute = (method: string, handler: EPR | boolean) => {
     R.Route(`game.sv6_${method}`, handler);
@@ -147,7 +169,7 @@ export function register() {
 
   R.Unhandled();
 
-  if (IO.Exists('./music_db.xml')) {
-    load_music_db();
-  }
+ 
+  load_music_db();
+  
 }

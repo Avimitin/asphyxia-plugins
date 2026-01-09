@@ -22,6 +22,90 @@ function zeroPad(num, places) {
     return Array(+(zero > 0 && zero)).join("0") + num;
 }
 
+function isEmptyJson(value) {
+    if (value === null || value === undefined) return true;
+    if (Array.isArray(value)) return value.length === 0;
+    if (typeof value === 'object') return Object.keys(value).length === 0;
+    return false;
+}
+
+function hideUiBlocker() {
+    const blocker = document.querySelector('.uiblocker');
+    if (!blocker) return;
+
+    blocker.classList.add('fade');
+    window.setTimeout(() => {
+        blocker.style.display = 'none';
+    }, 600);
+}
+
+function showLoadError(message) {
+    hideUiBlocker();
+
+    const loadingText = document.querySelector('#loading_text');
+    if (loadingText) loadingText.textContent = 'Error loading data.';
+
+    const errorLineId = 'load_error_line';
+    const container = document.querySelector('#test') || document.body;
+    let errorLine = document.querySelector(`#${errorLineId}`);
+    if (!errorLine) {
+        errorLine = document.createElement('p');
+        errorLine.id = errorLineId;
+        errorLine.className = 'has-text-danger';
+        errorLine.style.whiteSpace = 'pre-wrap';
+        container.prepend(errorLine);
+    }
+
+    errorLine.textContent = message;
+    try {
+        $('#test').show();
+    } catch (_) {
+        // ignore (jQuery not available / #test missing)
+    }
+}
+
+function formatAxiosError(err) {
+    const status = err?.response?.status;
+    const statusText = err?.response?.statusText;
+    const detail = err?.response?.data?.message || err?.message;
+    if (status) return `HTTP ${status}${statusText ? ' ' + statusText : ''}${detail ? `: ${detail}` : ''}`;
+    return detail || 'unknown error';
+}
+
+function loadJson(url, label) {
+    return new Promise((resolve, reject) => {
+        $.getJSON(url)
+            .done((json) => {
+                if (isEmptyJson(json)) {
+                    reject(new Error(`${label} returned empty JSON.`));
+                    return;
+                }
+                resolve(json);
+            })
+            .fail((jqxhr, textStatus, errorThrown) => {
+                const status = jqxhr?.status;
+                const statusText = jqxhr?.statusText;
+                const extra = errorThrown || textStatus || 'unknown error';
+                reject(new Error(`Failed to load ${label}${status ? ` (HTTP ${status}${statusText ? ' ' + statusText : ''})` : ''}: ${extra}`));
+            });
+    });
+}
+
+function loadMusicDb() {
+    return axios
+        .post('/emit/getMusicDB')
+        .then((response) => {
+            const data = response?.data;
+            if (isEmptyJson(data)) {
+                throw new Error('Music DB returned empty JSON.');
+            }
+            return data;
+        })
+        .catch((err) => {
+            throw new Error(`Failed to load Music DB: ${formatAxiosError(err)}`);
+        });
+}
+
 
 function getSkillAsset(skill) {
     return "static/asset/skill_lv/skill_" + zeroPad(skill, 2) + ".png";
@@ -706,25 +790,21 @@ $(function() {
     //     .css('font-size', "35px")
     // )
 
-    $.when(
-        // $.getJSON("static/asset/json/music_db.json", function(json) {
-        //     music_db = json;
-        //     // console.log(music_db);
-        // }),
-        axios.post('/emit/getMusicDB').then(function (response) {
-            music_db = response.data;
+    Promise.all([
+        loadMusicDb().then((json) => {
+            music_db = json;
         }),
-        $.getJSON("static/asset/json/course_data.json", function(json) {
+        loadJson("static/asset/json/course_data.json", 'course_data.json').then((json) => {
             course_db = json;
         }),
-        $.getJSON("static/asset/json/data.json", function(json) {
+        loadJson("static/asset/json/data.json", 'data.json').then((json) => {
             data_db = json;
         }),
-        $.getJSON("static/asset/json/appeal.json", function(json) {
+        loadJson("static/asset/json/appeal.json", 'appeal.json').then((json) => {
             appeal_db = json;
-            //console.log(appeal_db);
-        })
-    ).then(function() {
+        }),
+    ])
+    .then(function() {
         let currentVF = parseFloat(calculateVolforce()).toFixed(3);
         let maxVer;
         if(skill_data[0] != undefined){
@@ -919,6 +999,9 @@ $(function() {
         document.querySelector('.uiblocker').classList.toggle('fade');
         $('#test').fadeIn(1000);
     })
+    .catch((err) => {
+        showLoadError(err?.message ? err.message : String(err));
+    });
 
 
 

@@ -11,4 +11,6 @@ export interface MusicRecord {
   longRate: number;
   volRate: number;
   volforce: number;
+
+  judge: number[];
 }

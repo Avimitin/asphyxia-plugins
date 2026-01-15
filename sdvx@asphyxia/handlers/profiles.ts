@@ -115,7 +115,16 @@ export const saveScore: EPR = async (info, data, send) => {
       longRate: 0,
       volRate: 0,
       volforce: 0,
+      judge: [],
     };
+
+    if (record.judge.length == 0) {
+      console.log("No judge data found, save them for the first time so use current data as baseline.");
+      record.judge = i.numbers('judge', []);
+      if (record.judge.length == 7) {
+        console.log("Judge data length is valid with s-crit.");
+      }
+    }
 
     const score = i.number('score', 0);
     const exscore = i.number('exscore', 0);
@@ -125,9 +134,22 @@ export const saveScore: EPR = async (info, data, send) => {
       record.longRate = i.number('long_rate', 0);
       record.volRate = i.number('vol_rate', 0);
     }
+
     if (exscore > record.exscore) {
       record.exscore = exscore;
     }
+
+    if (score >= record.score || exscore >= record.exscore) {
+      const newJudge = i.numbers('judge', []);
+      if (newJudge.length == record.judge.length) {
+        for (let j = 0; j < record.judge.length; j++) {
+          if (newJudge[j] > record.judge[j]) {
+            record.judge[j] = newJudge[j];
+          }
+        }
+      }
+    }
+
 
     const volforce = i.number('volforce', 0);
 
@@ -139,6 +161,8 @@ export const saveScore: EPR = async (info, data, send) => {
     if (volforce > record.volforce) {
       record.volforce = volforce;
     }
+
+    
 
     if(i.number('clear_type', 0) == 6 && record.clear >= 4){
       console.log("Detected Maxxive Clear, but originally UC or PUC, no override.")

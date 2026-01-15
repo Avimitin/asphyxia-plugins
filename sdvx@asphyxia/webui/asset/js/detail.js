@@ -22,6 +22,61 @@ function zeroPad(num, places) {
     return Array(+(zero > 0 && zero)).join("0") + num;
 }
 
+function arraybuffer_emit(event, data) {
+    return axios.post(`/emit/${event}`, data ?? {},{responseType: 'arraybuffer', timeout: 3000000});
+}
+
+const GRAPHICS_BASE_PATH = 'data/graphics';
+
+function toGraphicsPath(urlOrPath) {
+    if (!urlOrPath) return urlOrPath;
+    if (urlOrPath.startsWith('static/asset/')) {
+        return `${GRAPHICS_BASE_PATH}/${urlOrPath.substring('static/asset/'.length)}`;
+    }
+    if (urlOrPath.startsWith('data/graphics/')) {
+        return `${GRAPHICS_BASE_PATH}/${urlOrPath.substring('data/graphics/'.length)}`;
+    }
+    return urlOrPath;
+}
+
+// Cache blob URLs so repeated re-renders don't refetch the same asset.
+const assetBlobUrlCache = new Map();
+
+async function getOrCreateAssetBlobUrl(urlOrPath) {
+    const path = toGraphicsPath(urlOrPath);
+    if (!path) return null;
+
+    const cached = assetBlobUrlCache.get(path);
+    if (cached) return cached;
+
+    try {
+        const res = await arraybuffer_emit('getAssetData', { path });
+        const data = res?.data;
+        if (!data) return null;
+
+        const blobUrl = URL.createObjectURL(new Blob([data], { type: 'image/png' }));
+        assetBlobUrlCache.set(path, blobUrl);
+        return blobUrl;
+    } catch (_) {
+        return null;
+    }
+}
+
+window.addEventListener('beforeunload', () => {
+    for (const blobUrl of assetBlobUrlCache.values()) {
+        try {
+            URL.revokeObjectURL(blobUrl);
+        } catch (_) {}
+    }
+    assetBlobUrlCache.clear();
+});
+
+async function setImgSrcFromAsset(imgEl, urlOrPath) {
+    if (!imgEl) return;
+    const blobUrl = await getOrCreateAssetBlobUrl(urlOrPath);
+    imgEl.setAttribute('src', blobUrl ?? urlOrPath);
+}
+
 function isEmptyJson(value) {
     if (value === null || value === undefined) return true;
     if (Array.isArray(value)) return value.length === 0;
@@ -157,7 +212,7 @@ function getMedal(clear) {
 
 function getAppealCard(appeal) {
     let result = appeal_db["appeal_card_data"]["card"].filter(object => object["@id"] == appeal);
-    return "static/asset/ap_card/" + result[0]["info"]["texture"] + ".png"
+    return "data/graphics/ap_card/" + result[0]["info"]["texture"] + ".png"
 }
 
 function getSongLevel(musicid, type) {
@@ -839,7 +894,11 @@ $(function() {
                     $('<div class="tile is-ancestor is-centered">').append(
                         $('<div class="tile is-parent is-3">').append(
                             $('<article class="tile is-child">').append(
-                                $('<img>').attr('src', getAppealCard(profile_data.appeal))
+                                (() => {
+                                    const img = $('<img>');
+                                    setImgSrcFromAsset(img[0], getAppealCard(profile_data.appeal));
+                                    return img;
+                                })()
                                 .css('width', '150px')
                             ).css('vertical-align', 'middle')
                         )

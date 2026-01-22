@@ -4,9 +4,7 @@ Plugin Version: **v6.2.0**
 
 ## Provide out of box usable exprience, everything is unlocked and good to go.  
 
-# For full expreience on webui, make sure to copy music database to root of sdvx plugin folder.
-# Other assets like chat stamps, nemsys avatars, submonitor backgrounds should also be copied to webui/asset folder respectively.
-# Currently EG Final data for the webui is not fully updated, you might need to update the entry manually if you want customizes.
+# Make sure to set SDVX installation path in CORE settings first.  
 
 Prerequisite CORE version: v1.50d or above
 
@@ -31,8 +29,6 @@ If you need support for HH and VW, use older version instead, too many new thing
 If you want to help with the plugin, you can open pull request.
 
 This version save data is not compatible with some forks plugin, please use it with caution if you already uses an unsupported version.
-
-Remember to import asset from the game files first time when using webui.
 
 Change Log
 ===========

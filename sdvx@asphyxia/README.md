@@ -4,7 +4,7 @@ Plugin Version: **v6.2.0**
 
 ## Provide out of box usable exprience, everything is unlocked and good to go.  
 
-# Make sure to set SDVX installation path in CORE settings first.  
+# Make sure to set SDVX installation path in CORE settings first. The Webui will load assets directly from the game installation folder.
 
 Prerequisite CORE version: v1.50d or above
 

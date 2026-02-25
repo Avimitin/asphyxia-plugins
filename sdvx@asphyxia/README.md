@@ -1,6 +1,6 @@
 # SOUND VOLTEX
 
-Plugin Version: **v6.2.0**
+Plugin Version: **v6.2.1**
 
 ## Provide out of box usable exprience, everything is unlocked and good to go.  
 
@@ -32,6 +32,10 @@ This version save data is not compatible with some forks plugin, please use it w
 
 Change Log
 ===========
+
+## 6.2.1
+
+1. Fix asset loading error when plugin is initializing without node type installed.
 
 ## 6.2.0
 

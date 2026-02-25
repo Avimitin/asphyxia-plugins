@@ -35,13 +35,12 @@ import { TRANSLATION_TABLE } from './utils';
 
 import { MusicRecord } from './models/music_record';
 
-import path from 'path';
-
 export let music_db;
 
 function load_music_db(){
 
   const fs = require('fs');
+  const path = require('path');
 
   if (U.GetConfig('sdvx_path') == '') {
     console.log('sdvx_path is not set, skipping music_db load');

@@ -70,9 +70,8 @@ export function register() {
     R.Route(`matixx_${method}`, handler);
     R.Route(`nextage_${method}`, handler)
     R.Route(`highvoltage_${method}`, handler)
-    R.Route(`fuzzup_${method}`, handler)    
+    R.Route(`fuzzup_${method}`, handler)
     R.Route(`galaxywave_${method}`, handler)
-    R.Route(`galaxywave_delta_${method}`, handler)
     // TODO: TB, and more older version?
   };
 

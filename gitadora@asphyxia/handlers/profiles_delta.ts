@@ -5,7 +5,9 @@ import { PlayerRanking } from "../models/playerranking";
 import { getDefaultProfile, Profile } from "../models/profile";
 import { getDefaultRecord, Record } from "../models/record";
 import { Extra, getDefaultExtra } from "../models/extra";
-import { getVersion, isDM } from "../utils";
+import { isDM } from "../utils";
+
+const DELTA_VERSION = "galaxywave_delta";
 import { getDefaultScores, Scores } from "../models/scores";
 
 import { PLUGIN_VER } from "../const";
@@ -33,7 +35,7 @@ export const regist: EPR = async (info, data, send) => {
   }
 
   const no = getPlayerNo(data);
-  const version = getVersion(info);
+  const version = DELTA_VERSION;
   const playerInfo = await getOrRegisterPlayerInfo(refid, version, no);
 
   await send.object({
@@ -54,7 +56,7 @@ export const check: EPR = async (info, data, send) => {
     }
 
   const no = getPlayerNo(data);
-  const version = getVersion(info)
+  const version = DELTA_VERSION;
   const playerInfo = await getOrRegisterPlayerInfo(refid, version, no)
 
   const result : CheckPlayerResponse = getCheckPlayerResponse(no, playerInfo.name, playerInfo.id)
@@ -69,7 +71,7 @@ export const getPlayer: EPR = async (info, data, send) => {
     }
 
   const no = getPlayerNo(data);
-  const version = getVersion(info);
+  const version = DELTA_VERSION;
   const time = BigInt(31536000);
   const dm = isDM(info);
   const game = dm ? 'dm' : 'gf';
@@ -523,7 +525,7 @@ async function registerUser(refid: string, version: string, id = _.random(0, 999
 
 export const savePlayers: EPR = async (info, data, send) => {
 
-  const version = getVersion(info);
+  const version = DELTA_VERSION;
   const dm = isDM(info);
   const game = dm ? 'dm' : 'gf';
   const sharedScoresEnabled = isSharedSongScoresEnabled();

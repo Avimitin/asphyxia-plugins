@@ -34,12 +34,10 @@ export const gameInfoGet: EPR = async (info, data, send) => {
           music: extraData.musics.map(mid => {
             return {
               musicid: K.ITEM('s32', mid),
-              get_border: K.ITEM('u8', 0),
             }
           })
         }
       },
-      infect_music: { term: K.ITEM('u8', 0) },
       unlock_challenge: { term: K.ITEM('s32', 0) },
       battle: { term: K.ITEM('s32', 0) },
       battle_chara: { term: K.ITEM('s32', 0) },
@@ -92,13 +90,15 @@ export const gameInfoGet: EPR = async (info, data, send) => {
             end_date_ms: K.ITEM('u64', BigInt(0)),
         }
       },
-      jubeat_omiyage_challenge: {},
-      kac2017: {},
-      nostalgia_concert: {},
+      galaxy_parade: {
+        corner_list: {},
+        gacha_table: {},
+      },
+      gitadoradon: {},
+      entry_information :{},
       trbitemdata: {},
       ctrl_movie: {},
       ng_jacket: {},
-      ng_recommend_music: {},
       ranking: {
         skill_0_999: {},
         skill_1000_1499: {},

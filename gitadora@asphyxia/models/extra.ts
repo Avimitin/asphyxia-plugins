@@ -54,6 +54,14 @@ export function getDefaultExtra(game: 'gf' | 'dm', version: string, id: number) 
     result.playstyle[26] = 0 //DELTA 判定エフェクト位置
     result.playstyle[27] = 0 //DELTA SHUTTER IN
     result.playstyle[28] = 0 //DELTA SHUTTER OUT
+    result.playstyle[36] = 1
+    result.playstyle[37] = 1
+    result.playstyle[38] = 1
+    result.playstyle[40] = 1
+    result.playstyle[41] = 2
+    result.playstyle[42] = 1
+    result.playstyle[43] = 2
+    result.playstyle[48] = 0
     result.playstyle[56] = 0 
     result.playstyle[57] = 1
     result.playstyle[58] = 1

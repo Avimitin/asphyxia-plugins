@@ -66,7 +66,6 @@ export function getDefaultExtra(game: 'gf' | 'dm', version: string, id: number) 
     result.playstyle[57] = 1
     result.playstyle[58] = 1
     result.playstyle[59] = 1
-    result.playstyle[60] = 17
     result.playstyle[61] = 1
     result.playstyle[62] = 1
     result.playstyle[63] = 1

@@ -93,6 +93,7 @@ export const getPlayer: EPR = async (info, data, send) => {
 
   const profile = dm ? dmProfile : gfProfile;
   const extra = dm ? dmExtra : gfExtra;
+  applyPlayHudPreset(extra.playstyle);
 
   await applySharedFavoriteMusicToExtra(refid, extra)
 
@@ -770,6 +771,19 @@ async function updatePlayerScoreCollection(refid, playedStages, version, game) {
 
   return scores
 }
+
+function applyPlayHudPreset(playstyle: number[]): void {
+  if (!Array.isArray(playstyle)) return;
+
+  // Only pad array to required length for version upgrades (50→70).
+  // Do NOT overwrite any existing values — let the user's saved settings persist.
+  if (playstyle.length < 70) {
+    for (let i = playstyle.length; i < 70; i++) {
+      playstyle[i] = 0;
+    }
+  }
+}
+
 
 async function getPlayerRanking(refid: string, version: string, game: 'gf' | 'dm') : Promise<PlayerRanking> {
   let profiles = await getAllProfiles(version, game)

@@ -98,8 +98,12 @@ export function GetVersion(info: EamuseInfo) {
     case "JDZ": return 18;
     case "KDZ": return 19;
     case "LDJ":
-      version = Number(info.module.slice(4, 6));
-      if (_.isNaN(version)) version = 20;
+      if (info.module.startsWith("IIDX")) {
+        version = Number(info.module.slice(4, 6));
+        if (_.isNaN(version) || version < 20) version = 20;
+      } else {
+        version = 20;
+      }
       break;
   }
 
